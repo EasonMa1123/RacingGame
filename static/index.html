@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Formula Sprint 3D</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game-canvas" aria-label="Formula Sprint 3D racing game"></canvas>
+
+    <section id="hud" aria-label="Racing heads up display">
+      <aside class="race-tower glass-panel" aria-label="Race position tower">
+        <header><span>Race</span><strong id="race-clock">0:00.000</strong></header>
+        <ol>
+          <li><b>1</b><span class="badge gold">18</span><strong>A Fuoco</strong><em>-2.6</em></li>
+          <li><b>2</b><span class="badge blue">15</span><strong>D Vanthoor</strong><em>-0.5</em></li>
+          <li><b>3</b><span class="badge blue">94</span><strong>L Duval</strong><em>-0.4</em></li>
+          <li><b>4</b><span class="badge blue">7</span><strong>M Conway</strong><em>-0.2</em></li>
+          <li><b>5</b><span class="badge gray">6</span><strong>J Munro</strong><em>+0.1</em></li>
+          <li class="player"><b>6</b><span class="badge red">51</span><strong>You</strong><em>+0.0</em></li>
+          <li><b>7</b><span class="badge blue">83</span><strong>R Kubica</strong><em>+0.3</em></li>
+          <li><b>8</b><span class="badge gray">99</span><strong>N Jani</strong><em>+0.5</em></li>
+        </ol>
+      </aside>
+
+      <div class="rear-view glass-panel" aria-label="Rear view mirror">
+        <div class="mirror-road"></div>
+        <i class="mirror-car one"></i>
+        <i class="mirror-car two"></i>
+        <i class="mirror-car three"></i>
+      </div>
+
+      <aside class="lap-panel glass-panel" aria-label="Lap timing panel">
+        <div><span>Lap</span><strong id="lap-counter">1 / 3</strong></div>
+        <div><span>Last</span><strong id="last-lap">-</strong></div>
+        <div><span>Best</span><strong id="best-lap">-</strong></div>
+        <div><span>Current</span><strong id="lap-time">00:00.000</strong></div>
+        <div><span>Backend</span><strong id="connection-status">Connecting</strong></div>
+      </aside>
+
+      <canvas id="minimap" class="track-map" width="230" height="170" aria-label="Track minimap"></canvas>
+
+      <aside class="relative-board glass-panel" aria-label="Relative timing board">
+        <header>Relative</header>
+        <div><b>12</b><strong>D Vanthoor</strong><em>-0.5</em></div>
+        <div><b>13</b><strong>L Duval</strong><em>-0.4</em></div>
+        <div><b>14</b><strong>M Conway</strong><em>-0.2</em></div>
+        <div class="player"><b>15</b><strong>You</strong><em>0.0</em></div>
+        <div><b>16</b><strong>A P Guidi</strong><em>+0.2</em></div>
+        <div><b>17</b><strong>R Kubica</strong><em>+0.3</em></div>
+      </aside>
+
+      <div class="speed-cluster glass-panel" aria-label="Speed, gear, and RPM">
+        <div class="dial-ring">
+          <strong id="gear">N</strong>
+          <span id="speed">0</span>
+          <small>MPH</small>
+        </div>
+        <div class="rpm-shell">
+          <div class="rpm-labels"><span>RPM</span><span id="rpm-value">1000</span></div>
+          <div id="rpm-bar"><i></i></div>
+        </div>
+      </div>
+
+      <div class="controls glass-panel">
+        <strong>Controls</strong>
+        <p>Gamepad: RT accelerate · LT brake · Left stick steer</p>
+        <p>Keyboard: W/↑ accelerate · S/↓ brake · A/D or ←/→ steer · C camera</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.165.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="/static/game.js"></script>
+</body>
+</html>
