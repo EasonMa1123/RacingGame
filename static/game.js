@@ -9,6 +9,8 @@ const hud = {
   lap: document.querySelector('#lap-counter'),
   lapTime: document.querySelector('#lap-time'),
   bestLap: document.querySelector('#best-lap'),
+  lastLap: document.querySelector('#last-lap'),
+  raceClock: document.querySelector('#race-clock'),
   status: document.querySelector('#connection-status'),
   minimap: document.querySelector('#minimap'),
 };
@@ -31,6 +33,7 @@ const clock = new THREE.Clock();
 const minimapContext = hud.minimap.getContext('2d');
 
 const keys = new Set();
+const drivingKeyCodes = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 let cameraMode = 'chase';
 let telemetrySocket = null;
 let telemetryTimer = 0;
@@ -47,10 +50,16 @@ connectTelemetry();
 
 window.addEventListener('resize', onResize);
 window.addEventListener('keydown', (event) => {
-  keys.add(event.key.toLowerCase());
-  if (event.key.toLowerCase() === 'c') cameraMode = cameraMode === 'chase' ? 'cockpit' : 'chase';
+  rememberKey(event);
+  if (drivingKeyCodes.has(event.code)) event.preventDefault();
+  if ((event.code === 'KeyC' || event.key.toLowerCase() === 'c') && !event.repeat) {
+    cameraMode = cameraMode === 'chase' ? 'cockpit' : 'chase';
+  }
 });
-window.addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
+window.addEventListener('keyup', (event) => {
+  forgetKey(event);
+  if (drivingKeyCodes.has(event.code)) event.preventDefault();
+});
 
 animate();
 
@@ -267,12 +276,26 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+function rememberKey(event) {
+  keys.add(event.key.toLowerCase());
+  keys.add(event.code.toLowerCase());
+}
+
+function forgetKey(event) {
+  keys.delete(event.key.toLowerCase());
+  keys.delete(event.code.toLowerCase());
+}
+
+function hasKey(...names) {
+  return names.some((name) => keys.has(name.toLowerCase()));
+}
+
 function readInput() {
   const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
   const pad = pads[0];
-  let throttle = keys.has('w') || keys.has('arrowup') ? 1 : 0;
-  let brake = keys.has('s') || keys.has('arrowdown') ? 1 : 0;
-  let steer = (keys.has('a') || keys.has('arrowleft') ? -1 : 0) + (keys.has('d') || keys.has('arrowright') ? 1 : 0);
+  let throttle = hasKey('w', 'keyw', 'arrowup') ? 1 : 0;
+  let brake = hasKey('s', 'keys', 'arrowdown') ? 1 : 0;
+  let steer = (hasKey('a', 'keya', 'arrowleft') ? -1 : 0) + (hasKey('d', 'keyd', 'arrowright') ? 1 : 0);
 
   if (pad) {
     steer = applyDeadzone(pad.axes[0] ?? steer, 0.08);
@@ -297,24 +320,27 @@ function applyDeadzone(value, deadzone) {
 }
 
 function updatePhysics(dt, input) {
-  const maxSpeed = 93; // meters/sec, approximately 208 mph.
-  const reverseMax = -15;
-  const accel = 42 * (1 - Math.min(Math.max(car.velocity, 0) / maxSpeed, 0.78));
-  const braking = car.velocity > 0 ? 72 : 34;
-  const drag = 0.018 * car.velocity * Math.abs(car.velocity) + 5.2 * car.velocity;
+  const maxSpeed = 92; // meters/sec, approximately 206 mph.
+  const reverseMax = -16;
+  const forwardSpeed = Math.max(car.velocity, 0);
+  const accel = 58 * (1 - Math.min(forwardSpeed / maxSpeed, 0.68));
+  const braking = car.velocity > 0 ? 78 : 38;
+  const rollingDrag = car.velocity * 0.42;
+  const aeroDrag = 0.0065 * car.velocity * Math.abs(car.velocity);
 
   car.velocity += input.throttle * accel * dt;
   car.velocity -= input.brake * braking * dt;
-  car.velocity -= drag * dt;
+  car.velocity -= (rollingDrag + aeroDrag) * dt;
   car.velocity = THREE.MathUtils.clamp(car.velocity, reverseMax, maxSpeed);
 
-  const speed01 = Math.min(Math.abs(car.velocity) / maxSpeed, 1);
-  const steeringLock = THREE.MathUtils.lerp(1.25, 0.36, speed01);
-  const slipAssist = THREE.MathUtils.lerp(1.0, 0.58, speed01);
+  const updatedSpeed01 = Math.min(Math.abs(car.velocity) / maxSpeed, 1);
+  const steeringLock = THREE.MathUtils.lerp(1.55, 0.44, updatedSpeed01);
+  const slipAssist = THREE.MathUtils.lerp(1.0, 0.62, updatedSpeed01);
   const steerAngle = input.steer * steeringLock;
-  car.heading -= steerAngle * car.velocity * 0.028 * dt;
+  const steerDirection = car.velocity >= 0 ? 1 : -1;
+  car.heading += steerAngle * Math.max(Math.abs(car.velocity), 7) * 0.034 * dt * steerDirection;
   car.heading += car.lateralVelocity * 0.0025 * dt;
-  car.lateralVelocity += input.steer * speed01 * 18 * dt;
+  car.lateralVelocity += input.steer * updatedSpeed01 * 20 * dt;
   car.lateralVelocity *= Math.pow(0.18 + slipAssist * 0.72, dt * 6);
 
   const forward = new THREE.Vector3(Math.sin(car.heading), 0, Math.cos(car.heading));
@@ -358,7 +384,7 @@ function handleLap(progress) {
 
 function updateCamera(dt) {
   const forward = new THREE.Vector3(Math.sin(car.heading), 0, Math.cos(car.heading));
-  const speed01 = Math.min(Math.abs(car.velocity) / 93, 1);
+  const speed01 = Math.min(Math.abs(car.velocity) / 92, 1);
   const targetFov = cameraMode === 'cockpit' ? 78 + speed01 * 10 : 62 + speed01 * 18;
   camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-dt * 4));
   camera.updateProjectionMatrix();
@@ -378,8 +404,12 @@ function updateCamera(dt) {
 
 function updateHUD() {
   const mph = Math.max(0, Math.round(car.velocity * 2.23694));
-  const gear = mph < 2 ? 'N' : Math.min(8, Math.max(1, Math.floor(mph / 27) + 1));
-  const rpm = gear === 'N' ? 1100 : Math.round(3200 + ((mph % 27) / 27) * 8800);
+  const gearBands = [0, 18, 42, 68, 95, 124, 154, 182];
+  const gear = mph < 2 ? 'N' : Math.min(8, gearBands.findLastIndex((limit) => mph >= limit) + 1);
+  const bandStart = gear === 'N' ? 0 : gearBands[gear - 1];
+  const bandEnd = gear === 'N' ? 18 : (gearBands[gear] ?? 212);
+  const gearProgress = THREE.MathUtils.clamp((mph - bandStart) / Math.max(bandEnd - bandStart, 1), 0, 1);
+  const rpm = gear === 'N' ? 1100 : Math.round(3300 + gearProgress * 8400);
   const rpmPercent = THREE.MathUtils.clamp((rpm - 1000) / 11000, 0, 1) * 100;
 
   hud.speed.textContent = mph.toString();
@@ -389,7 +419,9 @@ function updateHUD() {
   hud.rpmBar.classList.toggle('redline', rpm > 10500);
   hud.lap.textContent = `${car.lap} / ${track.lapsToWin}`;
   hud.lapTime.textContent = formatTime(performance.now() - car.lapStart);
-  hud.bestLap.textContent = car.bestLap ? formatTime(car.bestLap) : '--:--.---';
+  hud.lastLap.textContent = car.lastLapTime ? formatTime(car.lastLapTime) : '-';
+  hud.bestLap.textContent = car.bestLap ? formatTime(car.bestLap) : '-';
+  hud.raceClock.textContent = formatTime(performance.now()).replace(/^00:/, '');
 }
 
 function drawMinimap() {

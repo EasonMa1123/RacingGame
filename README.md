@@ -43,5 +43,5 @@ uvicorn main:app --reload
 - Looping circuit with asphalt ribbon, red/white kerbs, guard rails, grandstands, grass, skyline, shadows, and fog.
 - Smooth chase camera with high-speed FOV stretching plus cockpit camera toggle.
 - Arcade physics with acceleration curves, drag, braking, speed-based steering, and drift/grip behavior.
-- F1-inspired HUD with speed, gear, RPM redline flash, lap timer, lap counter, best lap, backend status, and minimap.
+- F1-inspired race overlay with position tower, relative timing, rear-view strip, lap panel, minimap, circular gear/speed dial, RPM redline flash, and backend status.
 - FastAPI WebSocket telemetry endpoint ready for lap logging, validation, leaderboards, ghosts, or multiplayer extensions.
