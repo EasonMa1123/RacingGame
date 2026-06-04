@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Formula Sprint 3D</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game-canvas" aria-label="Formula Sprint 3D racing game"></canvas>
+
+    <section id="hud" aria-label="Racing heads up display">
+      <div class="top-bar glass-panel">
+        <div>
+          <span class="label">Lap</span>
+          <strong id="lap-counter">1 / 3</strong>
+        </div>
+        <div>
+          <span class="label">Lap Time</span>
+          <strong id="lap-time">00:00.000</strong>
+        </div>
+        <div>
+          <span class="label">Best</span>
+          <strong id="best-lap">--:--.---</strong>
+        </div>
+        <div>
+          <span class="label">Backend</span>
+          <strong id="connection-status">Connecting</strong>
+        </div>
+      </div>
+
+      <div class="center-reticle"></div>
+
+      <div class="speed-cluster glass-panel">
+        <div class="gear-wrap">
+          <span class="label">Gear</span>
+          <strong id="gear">N</strong>
+        </div>
+        <div class="speed-wrap">
+          <strong id="speed">0</strong>
+          <span>MPH</span>
+        </div>
+        <div class="rpm-shell">
+          <div class="rpm-labels"><span>RPM</span><span id="rpm-value">1000</span></div>
+          <div id="rpm-bar"><i></i></div>
+        </div>
+      </div>
+
+      <div class="minimap glass-panel">
+        <div class="label">Circuit Map</div>
+        <canvas id="minimap" width="220" height="160"></canvas>
+      </div>
+
+      <div class="controls glass-panel">
+        <strong>Controls</strong>
+        <p>Gamepad: RT accelerate · LT brake · Left stick steer</p>
+        <p>Keyboard: W/↑ accelerate · S/↓ brake · A/D or ←/→ steer · C camera</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.165.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="/static/game.js"></script>
+</body>
+</html>
