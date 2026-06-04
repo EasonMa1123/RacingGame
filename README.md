@@ -6,7 +6,7 @@ A complete browser-hosted 3D open-wheel racing game inspired by modern F1 broadc
 
 ```text
 RacingGame/
-├── app.py                  # FastAPI app, static file serving, telemetry WebSocket
+├── main.py                 # FastAPI app and `python main.py` entry point
 ├── requirements.txt        # Python dependencies
 ├── static/
 │   ├── index.html          # Canvas and F1-style HUD shell
@@ -21,10 +21,16 @@ RacingGame/
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app:app --reload
+python main.py
 ```
 
 Open <http://127.0.0.1:8000> in a browser.
+
+You can also run it with Uvicorn directly:
+
+```bash
+uvicorn main:app --reload
+```
 
 ## Controls
 
